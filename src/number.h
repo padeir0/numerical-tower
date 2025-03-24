@@ -11,7 +11,8 @@ enum __attribute__((__packed__)) number_kind {
 
 typedef struct {
   uint32_t* digits;
-  int32_t   size;
+  int32_t   cap;
+  int32_t   len;
 } _natural;
 
 typedef struct {
