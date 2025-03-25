@@ -10,7 +10,7 @@ with an explicit scratch space.
 Example:
 
 ```c
-Number add(Context* ctx, const Number* a, const Number* b, Number* out);
+number add(context* ctx, const number* a, const number* b, number* out);
 ```
 
 Operations on decimal numbers need explicit precision.

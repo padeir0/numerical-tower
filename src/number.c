@@ -6,21 +6,20 @@
 #define DIGITS_PER_INT 9
 #define BASE 1_000_000_000
 
-uint32_t* alloc_natvec(int size) {
-  return (uint32_t*)malloc(size*sizeof(uint32_t));
-}
-
 number* alloc_number() {
   return (number*)malloc(sizeof(number));
 }
 
-void natvec_copy(uint32_t* dest, uint32_t* source, int len) {
-  memcpy(dest, source, len*sizeof(uint32_t));
+u32* natvec_alloc(int size) {
+  return (u32*)malloc(size*sizeof(u32));
 }
 
-void natural_set(_natural* nat, uint32_t integer) {
-  nat->len = 1;
-  nat->digits[0] = integer;
+void natvec_copy(u32* dest, u32* source, int len) {
+  memcpy(dest, source, len*sizeof(u32));
+}
+
+void natvec_free(u32* vec) {
+  free(vec);
 }
 
 _natural natural_empty() {
@@ -31,24 +30,32 @@ _natural natural_empty() {
   return n;
 }
 
-void natural_push_digit(_natural* out, uint32_t digit) {
+bool natural_push_digit(_natural* out, u32 digit) {
   if (out->cap == 0) {
-    out->digits = alloc_natvec(MIN_NAT_VEC);
+    out->digits = natvec_alloc(MIN_NAT_VEC);
+    if (out->digits == NULL) {
+      return false;
+    }
     out->cap = MIN_NAT_VEC;
   }
   if (out->len == out->cap) {
-    int32_t new_cap = 2 * out->cap;
-    uint32_t* new_vec = alloc_natvec(new_cap);
+    i32 new_cap = 2 * out->cap;
+    u32* new_vec = natvec_alloc(new_cap);
+    if (new_vec == NULL) {
+      return false;
+    }
     natvec_copy(new_vec, out->digits, out->len);
+    natvec_free(out->digits);
     out->digits = new_vec;
     out->cap = new_cap;
   }
   int index = out->len;
   out->len++;
   out->digits[index] = digit;
+  return true;
 }
 
-int natural_write_u32(uint32_t n, char* buffer, bool first) {
+int natural_write_u32(u32 n, char* buffer, bool first) {
   if (n == 0) {
     int i = 0;
     while (i < DIGITS_PER_INT) {
@@ -71,7 +78,7 @@ int natural_write_u32(uint32_t n, char* buffer, bool first) {
     }
   }
 
-  int distance = (uintptr_t)b - (uintptr_t)buffer;
+  int distance = (uptr)b - (uptr)buffer;
   return 9 - distance;
 }
 
@@ -93,14 +100,14 @@ int natural_i_buffwrite(_natural nat, char* buffer, int bufflen, bool pad_left, 
   bool first = !pad_left;
 
   while (0 <= i) {
-    uint32_t curr_digit = nat.digits[i];
+    u32 curr_digit = nat.digits[i];
     natural_write_u32(curr_digit, block, first);
     first = false;
     block += DIGITS_PER_INT;
     i--;
   }
 
-  int size = (uintptr_t)block - (uintptr_t)buffer;
+  int size = (uptr)block - (uptr)buffer;
   if (!pad_right) {
     while (0 < size && *(buffer+size-1) == '0') {
         size--;
@@ -114,19 +121,16 @@ int natural_buffwrite(_natural nat, char* buffer, int bufflen) {
   return natural_i_buffwrite(nat, buffer, bufflen, false, true);
 }
 
-number* number_new_int(int32_t integer) {
+number* number_new_int(i32 integer) {
   number* num = alloc_number();
   num->tag = nk_INTEGER;
 
-  int8_t sign = 1;
+  i8 sign = 1;
   if (integer < 0) {
     sign = -1;
     integer = -integer;
   }
-  uint32_t* vec = alloc_natvec(MIN_NAT_VEC);
-  num->data.integer.sign = sign;
-  num->data.integer.abs.digits = vec;
-  num->data.integer.abs.cap = MIN_NAT_VEC;
-  natural_set(&(num->data.integer.abs), (uint32_t) integer);
+
+  natural_push_digit(&num->data.integer.abs, integer);
   return num;
 }

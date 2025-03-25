@@ -1,4 +1,4 @@
-#include <stdint.h>
+#include "int_sizes.h"
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdlib.h>
@@ -10,26 +10,26 @@ enum __attribute__((__packed__)) number_kind {
 };
 
 typedef struct {
-  uint32_t* digits;
-  int32_t   cap;
-  int32_t   len;
+  u32* digits;
+  i32  cap;
+  i32  len;
 } _natural;
 
 typedef struct {
   _natural abs;
-  int8_t   sign;
+  i8       sign;
 } integer;
 
 typedef struct {
   _natural numerator;
   _natural denominator;
-  int8_t   sign;
+  i8       sign;
 } rational;
 
 typedef struct {
   _natural coefficient;
-  int32_t  exponent;    // max 2^31 digits
-  int8_t   sign;
+  i32  exponent;    // max 2^31 digits
+  i8   sign;
 } decimal;
 
 typedef struct {
@@ -48,15 +48,15 @@ enum __attribute__((__packed__)) number_status {
 };
 
 typedef struct {
-  int32_t precision;
+  i32 precision;
   enum number_status status;
   // scratch space
   number* a; number* b; number* c;
 } number_context;
 
-number* number_new_int(int32_t integer);
-number* number_new_rat(int32_t num, int32_t den);
-number* number_new_dec(int32_t integer, int32_t decimal);
+number* number_new_int(i32 integer);
+number* number_new_rat(i32 num, i32 den);
+number* number_new_dec(i32 integer, i32 decimal);
 
 void number_add(number_context* ctx, const number* a, const number* b, number* out);
 void number_sub(number_context* ctx, const number* a, const number* b, number* out);
